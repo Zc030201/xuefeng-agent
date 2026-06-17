@@ -388,7 +388,7 @@ async function queryData(t){
     }
     var seen={};var unique=[];
     for(var i=0;i<allWeb.length;i++){var k=allWeb[i].slice(0,50);if(!seen[k]){seen[k]=1;unique.push(allWeb[i]);}}
-    if(unique.length){webData='【联网搜索·仅供参考】\n';unique.slice(0,15).forEach(function(w){webData+='· '+w.slice(0,600)+'\n';});}
+    if(unique.length){webData='【联网搜索·仅供参考】\n';unique.slice(0,15).forEach(function(w){webData+='· '+w.slice(0,300)+'\n';});}
   }catch(e){console.warn('联网搜索失败:',e.message);}
 
   // 第5步：整合
