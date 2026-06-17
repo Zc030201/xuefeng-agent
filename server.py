@@ -353,17 +353,13 @@ async function queryData(t){
   var webData='';
   try{
     var queries=[];
-    // 路1：验证DB学校（冲稳保各5所，搜最新分数线）
+    // 路1：验证DB学校（冲稳保各2所，搜分数线+优势）
     var dbSchools=[];
-    if(j&&j.chong)for(var i=0;i<Math.min(5,j.chong.length);i++)dbSchools.push(j.chong[i].school);
-    if(j&&j.wen)for(var i=0;i<Math.min(5,j.wen.length);i++)dbSchools.push(j.wen[i].school);
-    if(j&&j.bao)for(var i=0;i<Math.min(5,j.bao.length);i++)dbSchools.push(j.bao[i].school);
+    if(j&&j.chong)for(var i=0;i<Math.min(2,j.chong.length);i++)dbSchools.push(j.chong[i].school);
+    if(j&&j.wen)for(var i=0;i<Math.min(2,j.wen.length);i++)dbSchools.push(j.wen[i].school);
+    if(j&&j.bao)for(var i=0;i<Math.min(2,j.bao.length);i++)dbSchools.push(j.bao[i].school);
     for(var i=0;i<dbSchools.length;i++){
-      queries.push(dbSchools[i]+' '+info.province+' 2025 录取分数线 位次');
-    }
-    // 批量搜学校优势（合并前8所）
-    if(dbSchools.length>0){
-      queries.push(dbSchools.slice(0,8).join(' ')+' 王牌专业 学校层次 就业优势 学费');
+      queries.push(dbSchools[i]+' '+info.province+' 2025录取分数线位次 王牌专业 就业');
     }
     // 路2：补全DB没有的2025数据
     if(info.majors.length&&info.province){
