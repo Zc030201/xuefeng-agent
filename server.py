@@ -330,7 +330,7 @@ async function queryData(t){
   console.log('正则提取:',JSON.stringify(info));
 
   console.log('DEBUG queryData params:',JSON.stringify({province:info.province,rank:info.rank,score:info.score,majors:info.majors}));
-  var dbSkip = !info.province&&!info.score; if(dbSkip){console.log('缺少省份和分数，跳过DB但保留联网搜索');}
+  var dbSkip = !info.province||(!info.rank&&!info.score); if(dbSkip){console.log("缺少关键信息，跳过DB但保留联网搜索");}
 
   // 第3步：搜索本地数据库
   var dbData='';
