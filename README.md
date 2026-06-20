@@ -4,8 +4,10 @@
 > 方法论源自张雪峰八本志愿填报专著 + 61节专业视频课程（1500+分钟），把"张雪峰那套"塞进了AI。
 > 浏览器打开即用，不需要命令行。
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: AGPLv3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
+
+> ⚠️ **版权声明**：本项目采用 **AGPL v3 强传染性协议**，Fork/修改/再发布必须保留原作者署名和仓库地址，并继续使用 AGPLv3 开源全部源码。**商业使用需单独授权**。擅自改为 MIT 等宽松协议重新发布 = 侵权。
 
 <p align="center">
   <img src="demo-preview.gif" alt="演示" width="700">
@@ -149,7 +151,7 @@
 
 **怎么更新？** — 重新下载 ZIP 覆盖文件夹。
 
-**要钱吗？** — Agent 免费开源。AI 调用按量计费，DeepSeek 聊几百次才几毛钱。
+**要钱吗？** — 个人使用完全免费。AI 调用按量计费（DeepSeek 聊几百次才几毛钱）。商业使用需联系作者获取授权。
 
 **支持手机吗？** — 目前支持 Windows 电脑。Mac 可用终端运行。
 
@@ -165,4 +167,19 @@
 
 ## 开源协议
 
-MIT License — 自由使用、修改、分发。
+**AGPL v3 — 强传染性开源协议**
+
+| 使用场景 | 是否允许 |
+|----------|---------|
+| 个人学习、研究、非商业使用 | ✅ 完全免费 |
+| 修改后自己用（不发布） | ✅ 允许 |
+| Fork 后重新开源 | ⚠️ 必须保留原作者署名 + 仓库地址 + 继续使用 AGPLv3 + 完整公开所有修改 |
+| 通过网络提供服务（SaaS/网站） | ⚠️ 必须完整公开全部源码（含修改） |
+| **商业使用 / 闭源商用** | ❌ **禁止。需联系作者获取单独商业授权** |
+| **删除原作者署名 / 宣称原创** | ❌ **侵权，无论是否商业使用** |
+| **改为 MIT 等宽松协议重新发布** | ❌ **违反 AGPLv3 传染性条款** |
+
+> **原作者（贺子麒 / ziqihe10-droid）保留单独商业授权的权利。**
+> 商业合作/授权请联系：https://github.com/ziqihe10-droid
+
+完整协议文本：[LICENSE](LICENSE) · https://www.gnu.org/licenses/agpl-3.0.html
