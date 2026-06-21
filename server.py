@@ -32,8 +32,33 @@ def query_db(province=None, school=None, major=None, limit=50):
     return [{'province':r[0],'year':r[1],'school_name':r[2],'major_name':r[3],'score':r[4],'rank':r[5]} for r in rows]
 
 def web_search(query, n=5):
-    # Baidu scraping no longer works (blocked). Return hint to use Tavily.
-    return ["搜索无结果。请在前端API设置中填入Tavily Key以启用联网搜索（tavily.com免费注册）。"]
+    """百度搜索兜底 — 当 Tavily 不可用时使用"""
+    results = []
+    try:
+        url = "https://www.baidu.com/s?wd=" + urllib.parse.quote(query)
+        req = urllib.request.Request(url, headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        })
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            html = resp.read().decode("utf-8", errors="ignore")
+        # 提取搜索结果摘要
+        snippets = re.findall(r'<span class="content-right_[^"]*">(.*?)</span>', html)
+        for s in snippets[:n]:
+            clean = re.sub(r'<[^>]+>', '', s).strip()
+            if len(clean) > 20:
+                results.append(clean[:300])
+        if not results:
+            # 备选：匹配任意摘要片段
+            fallback = re.findall(r'class="c-abstract"[^>]*>(.*?)</span>', html)
+            for s in fallback[:n]:
+                clean = re.sub(r'<[^>]+>', '', s).strip()
+                if len(clean) > 20:
+                    results.append(clean[:300])
+        if not results:
+            results.append("百度搜索未返回可用结果，建议注册 Tavily Key（tavily.com 免费）以获得更精准的AI搜索。")
+    except Exception as e:
+        results.append(f"搜索暂不可用（{e}）。建议注册 Tavily Key（tavily.com 免费）以获得更精准的AI搜索。")
+    return results if results else ["搜索无结果。请在前端API设置中填入Tavily Key以启用联网搜索（tavily.com免费注册）。"]
 
 class Handler(BaseHTTPRequestHandler):
     def _send(self, data, code=200):

@@ -83,13 +83,14 @@ async function send(){
   var info=extractInfo(t);if(info.province){var pr='【省份志愿政策提醒】';var ng={'浙江':80,'山东':96,'河北':96,'重庆':96,'辽宁':112};var gg={'江苏':40,'广东':45,'湖北':45,'湖南':45,'福建':40,'北京':30,'天津':50,'上海':24,'海南':24,'河南':48,'四川':45,'陕西':45,'山西':45,'云南':40,'贵州':45,'内蒙古':45,'安徽':45,'江西':45,'黑龙江':40,'吉林':40,'广西':40,'甘肃':45,'新疆':45,'宁夏':45,'青海':45,'西藏':45};if(ng[info.province]){pr+=info.province+'是专业+院校模式，可填'+ng[info.province]+'个志愿。你必须推荐足够多的学校(至少30-50所)，不要只给3-5所！';}else if(gg[info.province]){pr+=info.province+'是院校+专业组模式，可填'+gg[info.province]+'个专业组。你必须推荐足够数量，填满80%以上位置！';}else{pr+=info.province+'请推荐足够多的学校和专业，并提醒注意调剂风险。';}ms.push({role:'system',content:pr});}
   for(var i=Math.max(0,c.msgs.length-25);i<c.msgs.length;i++)ms.push({role:c.msgs[i].role,content:c.msgs[i].content});
   try{
-    var r=await fetch(cfg.url.replace(/\/+$/,'')+'/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+cfg.key},body:JSON.stringify({model:cfg.model||'deepseek-chat',messages:ms,temperature:0.7})});
-    if(!r.ok){var e=await r.json().catch(function(){return{};});throw new Error(e.error&&e.error.message||'HTTP '+r.status);}
+    var apiUrl=cfg.url.replace(/\/+$/,'')+'/v1/chat/completions';
+    var r=await fetch(apiUrl,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+cfg.key},body:JSON.stringify({model:cfg.model||'deepseek-chat',messages:ms,temperature:0.7})});
+    if(!r.ok){var e=await r.json().catch(function(){return{};});throw new Error('LLM API '+(e.error&&e.error.message||'HTTP '+r.status)+' → '+apiUrl);}
     var d=await r.json();var reply=d.choices[0].message.content;
     if(dh&&dh.indexOf('暂无数据')<0)reply='[查询到的数据]\n'+dh+'\n---\n'+reply;
     else reply='[查询参数] '+dh+'\n---\n'+reply;
     c.msgs.push({role:'assistant',content:reply});
-  }catch(e){c.msgs.push({role:'assistant',content:'出错：'+e.message});}
+  }catch(e){c.msgs.push({role:'assistant',content:'出错：'+e.message+'\n请检查API设置中的Base URL和Key是否正确'});}
   render();save();
 }
 
@@ -129,16 +130,18 @@ async function searchWeb(query, cfg, n){
   if(cfg.tavily){
     try{
       var ctrl=new AbortController();var to=setTimeout(function(){ctrl.abort();},12000);
-      var r=await fetch('https://api.tavily.com/search',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+cfg.tavily},body:JSON.stringify({query:query,search_depth:'basic',include_answer:true,max_results:n}),signal:ctrl.signal});
+      var tavUrl='https://api.tavily.com/search';
+      var r=await fetch(tavUrl,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+cfg.tavily},body:JSON.stringify({query:query,search_depth:'basic',include_answer:true,max_results:n}),signal:ctrl.signal});
       clearTimeout(to);
       if(r.ok){var d=await r.json();if(d.answer)results.push('[Tavily总结] '+d.answer);if(d.results){d.results.forEach(function(x){results.push(x.title+': '+x.content.slice(0,300));});}}
-    }catch(e){console.warn('Tavily failed:',e.message);}
+      else{console.warn('Tavily HTTP '+r.status);}
+    }catch(e){console.warn('Tavily失败:',e.message);}
   }
   if(!results.length){
     try{
       var r2=await fetch('/search?q='+encodeURIComponent(query));
-      if(r2.ok){var d2=await r2.json();if(d2.results){d2.results.forEach(function(x){results.push(x);});}}
-    }catch(e){console.warn('Baidu search failed:',e.message);}
+      if(r2.ok){var d2=await r2.json();if(d2.results&&d2.results.length){results.push('[百度搜索] '+(cfg.tavily?'Tavily无结果，百度兜底:':'未配置Tavily，使用百度搜索:'));d2.results.forEach(function(x){results.push(x);});}}
+    }catch(e){console.warn('百度搜索失败:',e.message);}
   }
   return results;
 }
@@ -242,7 +245,7 @@ async function queryData(t){
     for(var i=0;i<queries.length;i++){if(!seenQ[queries[i]]){seenQ[queries[i]]=1;finalQ.push(queries[i]);}}
     // 分3批并行搜索（每批5个同时发，避免限流）
     var allWeb=[];
-    for(var b=0;b<finalQ.length;b+=3){
+    for(var b=0;b<finalQ.length;b+=5){
       var batch=finalQ.slice(b,b+5);
       var tasks=[];for(var i=0;i<batch.length;i++){tasks.push(searchWeb(batch[i],cfg,2));}
       try{var results=await Promise.all(tasks);for(var i=0;i<results.length;i++){allWeb=allWeb.concat(results[i]);}}catch(e){console.warn('批次搜索失败:',e.message);}
@@ -262,7 +265,7 @@ async function queryData(t){
 function getCfg(){return{url:localStorage.getItem('cf_url')||'https://api.deepseek.com',key:localStorage.getItem('cf_key')||'',model:localStorage.getItem('cf_model')||'deepseek-chat',tavily:localStorage.getItem('cf_tav')||''};}
 function openSet(){var ov=S('setOverlay');if(ov)ov.style.display='flex';var c=getCfg();var su=S('sUrl'),sk=S('sKey'),sm=S('sModel'),st=S('sTav');if(su)su.value=c.url;if(sk)sk.value=c.key;if(sm)sm.value=c.model;if(st)st.value=c.tavily;}
 function closeSet(){var ov=S('setOverlay');if(ov)ov.style.display='none';}
-async function testConn(){var su=S('sUrl'),sk=S('sKey'),sm=S('sModel'),sv=S('sTav'),stt=S('st');if(!su||!sk||!stt)return;var u=su.value.trim(),k=sk.value.trim(),m=sm?sm.value.trim():'',tv=sv?sv.value.trim():'';if(!u||!k){stt.innerHTML='<span class=\"st b\">请填写URL和Key</span>';return;}try{localStorage.setItem('cf_url',u);localStorage.setItem('cf_key',k);localStorage.setItem('cf_model',m);if(tv)localStorage.setItem('cf_tav',tv);}catch(e){}stt.textContent='测试中...';try{var r=await fetch(u.replace(/\/+$/,'')+'/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},body:JSON.stringify({model:m||'deepseek-chat',messages:[{role:'user',content:'hi'}],max_tokens:5})});if(r.ok){stt.innerHTML='<span class=\"st g\">连接OK</span>';setTimeout(closeSet,800);}else{var e=await r.json().catch(function(){return{};});stt.innerHTML='<span class=\"st b\">'+(e.error&&e.error.message||'')+'</span>';}}catch(e){stt.innerHTML='<span class=\"st b\">'+e.message+'</span>';}}
+async function testConn(){var su=S('sUrl'),sk=S('sKey'),sm=S('sModel'),sv=S('sTav'),stt=S('st');if(!su||!sk||!stt)return;var u=su.value.trim(),k=sk.value.trim(),m=sm?sm.value.trim():'',tv=sv?sv.value.trim():'';if(!u||!k){stt.innerHTML='<span class=\"st b\">请填写URL和Key</span>';return;}try{localStorage.setItem('cf_url',u);localStorage.setItem('cf_key',k);localStorage.setItem('cf_model',m);if(tv)localStorage.setItem('cf_tav',tv);}catch(e){}stt.textContent='测试中...';try{var r=await fetch(u.replace(/\/+$/,'')+'/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+k},body:JSON.stringify({model:m||'deepseek-chat',messages:[{role:'user',content:'hi'}],max_tokens:5})});if(r.ok){stt.innerHTML='<span class=\"st g\">连接OK</span>';setTimeout(closeSet,800);}else{var e=await r.json().catch(function(){return{};});stt.innerHTML='<span class=\"st b\">'+(e.error&&e.error.message||'')+'</span>';}}catch(e){stt.innerHTML='<span class=\"st b\">连接失败: '+e.message+'<br><small>请求地址: '+u.replace(/\/+$/,'')+'/v1/chat/completions</small></span>';}}
 
 // Event bindings
 function B(id,ev,fn){var el=S(id);if(el)el[ev]=fn;}
