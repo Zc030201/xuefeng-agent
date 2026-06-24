@@ -252,12 +252,12 @@ class Handler(BaseHTTPRequestHandler):
                     for k, v in um_raw.items():
                         r = v['ranks']; s = v['scores']; avg_sc = int(sum(s)/len(s)); avg_rk = int(sum(r)/len(r))
                         yr = v['major']
-                    if len(r)>=2:
-                        if v['years'][0]==2024: yr += ' [24:'+str(s[0])+'分/'+str(r[0])+'位 25:'+str(s[1])+'分/'+str(r[1])+'位]'
-                        else: yr += ' [24:'+str(s[1])+'分/'+str(r[1])+'位 25:'+str(s[0])+'分/'+str(r[0])+'位]'
-                    elif len(r)==1: yr += ' ['+str(v['years'][0])+':'+str(s[0])+'分/'+str(r[0])+'位]'
-                        um_all.append({'school':v['school'],'major':yr,'score':avg_sc,'rank':avg_rk,'year':'综合','source':'user'})
-                    um_all.sort(key=lambda x: x['rank'])
+                        yr = v["major"]
+                        if len(r)>=2:
+                            if v["years"][0]==2024: yr += " [24:"+str(s[0])+"分/"+str(r[0])+"位 25:"+str(s[1])+"分/"+str(r[1])+"位]"
+                            else: yr += " [24:"+str(s[1])+"分/"+str(r[1])+"位 25:"+str(s[0])+"分/"+str(r[0])+"位]"
+                        elif len(r)==1: yr += " ["+str(v["years"][0])+":"+str(s[0])+"分/"+str(r[0])+"位]"
+                        um_all.append({"school":v["school"],"major":yr,"score":avg_sc,"rank":avg_rk,"year":"综合","source":"user"})
                     n = len(um_all)
                     ch = um_all[:n//3] if n>=3 else um_all
                     wn = um_all[n//3:2*n//3] if n>=3 else []
