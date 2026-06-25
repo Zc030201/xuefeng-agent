@@ -247,7 +247,7 @@ class Handler(BaseHTTPRequestHandler):
                         if not u.get('score') or not u.get('rank'): continue
                         k = u['school'] + '|' + (u.get('major',''))
                         if k not in um_raw: um_raw[k] = {'school':u['school'],'major':u.get('major',''),'scores':[],'ranks':[],'years':[]}
-                        um_raw[k]['scores'].append(u['score']); um_raw[k]['ranks'].append(u['rank'])
+                        um_raw[k]['scores'].append(u['score']); um_raw[k]['ranks'].append(u['rank']); um_raw[k]['years'].append(u['year'])
                     um_all = []
                     for k, v in um_raw.items():
                         r = v['ranks']; s = v['scores']; avg_sc = int(sum(s)/len(s)); avg_rk = int(sum(r)/len(r))
@@ -258,6 +258,7 @@ class Handler(BaseHTTPRequestHandler):
                             else: yr += " [24:"+str(s[1])+"分/"+str(r[1])+"位 25:"+str(s[0])+"分/"+str(r[0])+"位]"
                         elif len(r)==1: yr += " ["+str(v["years"][0])+":"+str(s[0])+"分/"+str(r[0])+"位]"
                         um_all.append({"school":v["school"],"major":yr,"score":avg_sc,"rank":avg_rk,"year":"综合","source":"user"})
+                    um_all.sort(key=lambda x: x["rank"])
                     n = len(um_all)
                     ch = um_all[:n//3] if n>=3 else um_all
                     wn = um_all[n//3:2*n//3] if n>=3 else []
